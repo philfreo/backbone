@@ -1033,6 +1033,34 @@
     deepEqual(collection.models, [one, two, three]);
   });
 
+  test('`set` matches input order if sort:false, even with comparator', function () {
+    var collection = new Backbone.Collection(null, {comparator: 'id'});
+
+    collection.set([{id: 2}, {id: 4}, {id: 6}], {sort: false});
+    deepEqual(collection.pluck('id'), [2, 4, 6]);
+
+    collection.set([{id: 3}, {id: 2}, {id: 4}, {id: 6}], {sort: false});
+    deepEqual(collection.pluck('id'), [3, 2, 4, 6]);
+  });
+
+  test('`set` matches input order if remove:false, sort:false, even with comparator', function () {
+    var collection = new Backbone.Collection(null, {comparator: 'id'});
+
+    collection.set([{id: 4}, {id: 2}, {id: 6}], {sort: false});
+    deepEqual(collection.pluck('id'), [4, 2, 6]);
+    
+    // adding new model in the end and leaving off the old one at the end.
+    // desired order at the end will be amgiguous, so test for either option.
+    collection.set([{id: 4}, {id: 2}, {id: 3}], {remove: false, sort: false});
+    var result = collection.pluck('id').join(' ');
+    ok(result === '4 2 3 6' || result === '4 2 6 3', 'adding & removing last item');
+
+    // adding new model in the front and leaving off the one at the end.
+    // order should be well-defined.
+    collection.set([{id: 3}, {id: 4}, {id: 2}], {remove: false, sort: false});
+    deepEqual(collection.pluck('id'), [3, 4, 2, 6], 'adding item to front');
+  });
+
   test("#1894 - Push should not trigger a sort", 0, function() {
     var Collection = Backbone.Collection.extend({
       comparator: 'id',
